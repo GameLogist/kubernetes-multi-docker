@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t gamelogist/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run gamelogist/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t gamelogist/multi-client ./client 
+  - docker build -t gamelogist/multi-nginx ./nginx
+  - docker build -t gamelogist/multi-server ./server
+  - docker build -t gamelogist/multi-worker ./worker
+  #Login into docker cli
+  - echo "$DOCKER_PASSWORD" | docerk login -u "$DOCKER_ID" --password-stdin
+  #Puch images to docker hub
+  - docker push gamelogist/multi-client
+  - docker push gamelogist/multi-nginx
+  - docker push gamelogist/multi-server
+  - docker push gamelogist/multi-worker
